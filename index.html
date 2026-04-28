@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🏅 응원뱃지 퀴즈 이벤트</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(150deg, #FF8C42 0%, #FF6B35 40%, #E8435A 80%, #C0392B 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 40px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 28px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+      overflow: hidden;
+    }
+
+    /* ── 헤더 ── */
+    .card-header {
+      background: linear-gradient(135deg, #FF8C42 0%, #FF6B35 50%, #E8435A 100%);
+      color: #fff;
+      text-align: center;
+      padding: 32px 24px 28px;
+      position: relative;
+    }
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 28px;
+      background: #fff;
+      border-radius: 28px 28px 0 0;
+    }
+    .badge-icon { font-size: 2.6rem; display: block; margin-bottom: 6px; }
+    .card-header h1 { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.3px; line-height: 1.4; }
+    .card-header p  { font-size: 0.8rem; opacity: 0.88; margin-top: 5px; }
+
+    /* ── 스텝 인디케이터 ── */
+    .step-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 18px 24px 0;
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #ccc;
+      transition: color 0.3s;
+    }
+    .step-item.active { color: #FF6B35; }
+    .step-item.done   { color: #aaa; }
+    .step-dot {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #eee;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 900;
+      color: #aaa;
+      transition: background 0.3s, color 0.3s;
+      flex-shrink: 0;
+    }
+    .step-item.active .step-dot { background: #FF6B35; color: #fff; }
+    .step-item.done .step-dot   { background: #ddd; color: #999; }
+    .step-line {
+      flex: 1; height: 2px;
+      background: #eee;
+      max-width: 40px;
+      border-radius: 2px;
+    }
+
+    /* ── 바디 ── */
+    .card-body { padding: 20px 24px 32px; }
+
+    /* 화면 전환 */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* 사번 */
+    .section-label {
+      font-size: 0.72rem; font-weight: 700;
+      color: #FF6B35; letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+    .input-group { margin-bottom: 6px; }
+    .input-field {
+      width: 100%;
+      border: 2px solid #eee;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-size: 0.98rem;
+      font-family: inherit;
+      color: #2D2D2D;
+      background: #FAFAFA;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .input-field:focus {
+      border-color: #FF6B35;
+      box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
+      background: #fff;
+    }
+    .input-field::placeholder { color: #bbb; }
+    .privacy-note { font-size: 0.72rem; color: #aaa; margin-top: 5px; line-height: 1.5; }
+
+    .divider { border: none; border-top: 2px dashed #F0F0F0; margin: 18px 0; }
+
+    /* Q1 질문 박스 */
+    .question-box {
+      background: linear-gradient(135deg, #FFF4EE, #FFF8F5);
+      border: 1.5px solid #FFD4BC;
+      border-radius: 18px;
+      padding: 18px 16px 14px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .question-box .q-tag {
+      display: inline-block;
+      background: #FF6B35;
+      color: #fff;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .question-box p { font-size: 0.97rem; font-weight: 700; color: #2D2D2D; line-height: 1.55; }
+    .question-sub { font-size: 0.8rem; color: #888; text-align: center; margin: 8px 0 14px; line-height: 1.5; }
+
+    /* ── 캐릭터 카드 그리드 ── */
+    .char-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .char-card {
+      border: 2.5px solid #eee;
+      border-radius: 18px;
+      padding: 14px 8px 12px;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      position: relative;
+    }
+    .char-card:active { transform: scale(0.97); }
+    .char-card.selected {
+      border-color: #FF6B35;
+      background: #FFF4EE;
+      box-shadow: 0 4px 16px rgba(255,107,53,0.18);
+    }
+    .char-card .check-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #FF6B35;
+      color: #fff;
+      font-size: 0.65rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .char-card.selected .check-badge { display: flex; }
+    .char-card img {
+      width: 80px; height: 80px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 8px;
+      mix-blend-mode: multiply;
+    }
+    .char-name {
+      font-size: 0.8rem; font-weight: 700;
+      color: #333; line-height: 1.4;
+    }
+    .char-card.selected .char-name { color: #FF6B35; }
+
+    /* 5번째 카드 가운데 정렬 */
+    .char-card-5th {
+      grid-column: 1 / -1;
+      max-width: 160px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── 힌트 & 기회 표시 (Q2) ── */
+    .hint-box {
+      background: #FFFBEE;
+      border: 1.5px solid #FFE680;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 0.83rem;
+      color: #7A6000;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .chances {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .chances-label { font-size: 0.82rem; color: #888; font-weight: 500; }
+    .chances-dots  { display: flex; gap: 6px; }
+    .dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #FF6B35;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .dot.used { background: #E0E0E0; transform: scale(0.85); }
+
+    /* 숫자 입력 */
+    .number-input {
+      width: 100%;
+      border: 2px solid #eee;
+      border-radius: 14px;
+      padding: 15px 16px;
+      font-size: 1.3rem;
+      font-family: inherit;
+      font-weight: 700;
+      color: #2D2D2D;
+      background: #FAFAFA;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      margin-bottom: 8px;
+    }
+    .number-input::-webkit-inner-spin-button,
+    .number-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .number-input:focus {
+      border-color: #FF6B35;
+      box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
+      background: #fff;
+    }
+    .number-input:disabled { background: #F5F5F5; color: #bbb; cursor: not-allowed; }
+
+    /* 피드백 */
+    .feedback {
+      min-height: 34px; text-align: center;
+      font-size: 0.9rem; font-weight: 600;
+      color: #666; margin-bottom: 14px;
+      padding: 7px 12px; border-radius: 10px;
+      transition: all 0.3s;
+    }
+    .feedback.show-higher { background: #EEF9FF; color: #0077BB; }
+    .feedback.show-lower  { background: #FFF0F0; color: #CC2200; }
+    .feedback.show-close  { background: #FFF8EE; color: #CC6600; }
+
+    /* 버튼 */
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #FF8C42 0%, #FF6B35 50%, #E8435A 100%);
+      color: #fff; border: none;
+      border-radius: 16px; padding: 17px;
+      font-size: 1.02rem; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      letter-spacing: -0.2px;
+      box-shadow: 0 6px 20px rgba(255,107,53,0.35);
+      transition: transform 0.15s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:active { transform: scale(0.97); box-shadow: 0 3px 10px rgba(255,107,53,0.25); }
+    .btn-primary:disabled {
+      background: linear-gradient(135deg, #ddd, #ccc);
+      box-shadow: none; cursor: not-allowed; opacity: 0.7;
+    }
+
+    /* ── 결과 오버레이 ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .overlay.visible { opacity: 1; pointer-events: all; }
+
+    .result-card {
+      background: #fff;
+      border-radius: 28px 28px 0 0;
+      padding: 28px 24px 40px;
+      width: 100%; max-width: 480px;
+      text-align: center;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .overlay.visible .result-card { transform: translateY(0); }
+
+    .drag-handle { width: 40px; height: 4px; background: #E0E0E0; border-radius: 4px; margin: 0 auto 20px; }
+    .result-icon { font-size: 3.6rem; margin-bottom: 10px; display: block; }
+    .result-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 6px; letter-spacing: -0.5px; color: #FF6B35; }
+    .result-answer { font-size: 0.92rem; color: #444; line-height: 1.65; margin-bottom: 18px; white-space: pre-line; }
+    .result-message-box {
+      border-radius: 16px; padding: 16px;
+      font-size: 0.86rem; line-height: 1.7; color: #555;
+      background: #FFF4EE; border: 1.5px solid #FFD4BC;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- 헤더 -->
+  <div class="card-header">
+    <span class="badge-icon">🏅</span>
+    <h1>응원뱃지 퀴즈 이벤트</h1>
+    <p>2문항을 풀고 경품 추첨에 참여하세요!</p>
+  </div>
+
+  <!-- 스텝 인디케이터 -->
+  <div class="step-bar">
+    <div class="step-item active" id="step1-item">
+      <div class="step-dot">1</div>
+      <span>캐릭터 선택</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step-item" id="step2-item">
+      <div class="step-dot">2</div>
+      <span>숫자 맞추기</span>
+    </div>
+  </div>
+
+  <!-- 바디 -->
+  <div class="card-body">
+
+    <!-- ════════════════ SCREEN 1: 사번 + Q1 ════════════════ -->
+    <div class="screen active" id="screen1">
+
+      <!-- 사번 입력 -->
+      <div class="input-group">
+        <div class="section-label">사번 입력 (필수)</div>
+        <input type="text" id="emp-id" class="input-field"
+          placeholder="사번을 입력해주세요 (예: 310000)"
+          maxlength="20" autocomplete="off">
+        <p class="privacy-note">🔒 사번은 당첨자 확인 목적으로만 사용되며, 이벤트 종료 후 삭제됩니다.</p>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Q1 질문 -->
+      <div class="question-box">
+        <span class="q-tag">📋 Q1</span>
+        <p>우리 회사 구성원에게 가장 많이 나온<br>1등 캐릭터는 무엇일까요?</p>
+      </div>
+      <p class="question-sub">아래 캐릭터 카드 중 1등이라고 생각하는<br>캐릭터를 선택해주세요.</p>
+
+      <!-- 캐릭터 카드 -->
+      <div class="char-grid">
+        <div class="char-card" data-char="공감의 마법사" onclick="selectChar(this)">
+          <span class="check-badge">✓</span>
+          <img src="images/char1.png" alt="공감의 마법사">
+          <div class="char-name">공감의<br>마법사</div>
+        </div>
+        <div class="char-card" data-char="거침없는 돌격대장" onclick="selectChar(this)">
+          <span class="check-badge">✓</span>
+          <img src="images/char2.png" alt="거침없는 돌격대장">
+          <div class="char-name">거침없는<br>돌격대장</div>
+        </div>
+        <div class="char-card" data-char="불변의 파수꾼" onclick="selectChar(this)">
+          <span class="check-badge">✓</span>
+          <img src="images/char3.png" alt="불변의 파수꾼">
+          <div class="char-name">불변의<br>파수꾼</div>
+        </div>
+        <div class="char-card" data-char="궁극의 마스터" onclick="selectChar(this)">
+          <span class="check-badge">✓</span>
+          <img src="images/char4.png" alt="궁극의 마스터">
+          <div class="char-name">궁극의<br>마스터</div>
+        </div>
+        <div class="char-card char-card-5th" data-char="원칙의 수호자" onclick="selectChar(this)">
+          <span class="check-badge">✓</span>
+          <img src="images/char5.png" alt="원칙의 수호자">
+          <div class="char-name">원칙의<br>수호자</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-next" onclick="goToQ2()" disabled>다음 →</button>
+    </div>
+
+    <!-- ════════════════ SCREEN 2: Q2 ════════════════ -->
+    <div class="screen" id="screen2">
+
+      <!-- Q2 질문 -->
+      <div class="question-box">
+        <span class="q-tag">📋 Q2</span>
+        <p>지난달, 응원뱃지를 가장 많이 받은 사람은<br>몇 개를 받았을까요?</p>
+      </div>
+
+      <div class="hint-box">💡 힌트: 두 자릿수입니다! (10~30 사이)</div>
+
+      <!-- 남은 기회 -->
+      <div class="chances">
+        <span class="chances-label" id="chances-text">남은 기회 3번</span>
+        <div class="chances-dots">
+          <div class="dot" id="dot-1"></div>
+          <div class="dot" id="dot-2"></div>
+          <div class="dot" id="dot-3"></div>
+        </div>
+      </div>
+
+      <!-- 숫자 입력 -->
+      <input type="number" id="answer-input" class="number-input"
+        placeholder="숫자를 입력해주세요"
+        min="0" max="999" inputmode="numeric" pattern="[0-9]*">
+
+      <!-- 피드백 -->
+      <div class="feedback" id="feedback"></div>
+
+      <button class="btn-primary" id="submit-btn" onclick="checkAnswer()">확인하기</button>
+    </div>
+
+  </div><!-- /card-body -->
+</div><!-- /card -->
+
+<!-- 결과 오버레이 -->
+<div class="overlay" id="result-overlay">
+  <div class="result-card">
+    <div class="drag-handle"></div>
+    <span class="result-icon">👏</span>
+    <div class="result-title">참여가 완료되었습니다</div>
+    <div class="result-answer">결과는 이벤트 종료 후 공개됩니다.</div>
+    <div class="result-message-box">정답자 중 추첨을 통해 경품이 제공됩니다.</div>
+  </div>
+</div>
+
+<script>
+  // ★ Apps Script 배포 후 아래 URL을 교체하세요
+  const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+  const Q1_CORRECT_CHAR = '공감의 마법사'; // 내부 정답 — 화면에 노출하지 않음
+  const ANSWER = 18;
+  const MAX_TRIES = 3;
+
+  let selectedChar = null;
+  let tries = 0;
+  let gameOver = false;
+  let submittedAnswers = [];
+  let isCorrectAnswerGiven = false;
+  let empId = '';
+
+  // ── localStorage 중복 방지 ──
+  function getSubmittedIds() {
+    try { return JSON.parse(localStorage.getItem('quiz_submitted_ids') || '[]'); }
+    catch { return []; }
+  }
+  function saveSubmittedId(id) {
+    const ids = getSubmittedIds();
+    if (!ids.includes(id)) {
+      ids.push(id);
+      localStorage.setItem('quiz_submitted_ids', JSON.stringify(ids));
+    }
+  }
+
+  // ── Q1 캐릭터 선택 ──
+  function selectChar(el) {
+    document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedChar = el.dataset.char;
+    document.getElementById('btn-next').disabled = false;
+  }
+
+  // ── Q1 → Q2 전환 ──
+  function goToQ2() {
+    empId = document.getElementById('emp-id').value.trim();
+
+    if (!empId) {
+      const empInput = document.getElementById('emp-id');
+      empInput.style.borderColor = '#E8435A';
+      empInput.focus();
+      setTimeout(() => { empInput.style.borderColor = ''; }, 1500);
+      return;
+    }
+    if (getSubmittedIds().includes(empId)) {
+      alert('이미 참여를 완료하셨어요 😊');
+      return;
+    }
+    if (!selectedChar) return;
+
+    // 스텝 전환
+    document.getElementById('screen1').classList.remove('active');
+    document.getElementById('screen2').classList.add('active');
+    document.getElementById('step1-item').classList.remove('active');
+    document.getElementById('step1-item').classList.add('done');
+    document.getElementById('step2-item').classList.add('active');
+
+    document.getElementById('answer-input').focus();
+  }
+
+  // ── Q2 도트 갱신 ──
+  const dots = [
+    document.getElementById('dot-1'),
+    document.getElementById('dot-2'),
+    document.getElementById('dot-3')
+  ];
+  function updateDots() {
+    dots.forEach((d, i) => d.classList.toggle('used', i < tries));
+    const rem = MAX_TRIES - tries;
+    document.getElementById('chances-text').textContent =
+      rem > 0 ? `남은 기회 ${rem}번` : '도전 기회 소진';
+  }
+
+  function getFeedbackMessage(val) {
+    if (val >= 16 && val <= 20) return { text: '거의 왔어요 👀', cls: 'show-close' };
+    if (val < ANSWER)           return { text: '조금 더 높아요 ⬆️', cls: 'show-higher' };
+    return                             { text: '너무 높아요 ⬇️',   cls: 'show-lower' };
+  }
+
+  function checkAnswer() {
+    if (gameOver) return;
+
+    const input = document.getElementById('answer-input');
+    const raw   = input.value.trim();
+    const val   = parseInt(raw, 10);
+
+    if (raw === '' || isNaN(val)) {
+      input.style.borderColor = '#E8435A';
+      input.focus();
+      setTimeout(() => { input.style.borderColor = ''; }, 1500);
+      return;
+    }
+
+    tries++;
+    submittedAnswers.push(val);
+    if (val === ANSWER) isCorrectAnswerGiven = true;
+    updateDots();
+
+    const feedbackEl = document.getElementById('feedback');
+    const msg = getFeedbackMessage(val);
+    feedbackEl.textContent = msg.text;
+    feedbackEl.className   = 'feedback ' + msg.cls;
+
+    if (tries >= MAX_TRIES) {
+      gameOver = true;
+      document.getElementById('answer-input').disabled = true;
+      document.getElementById('submit-btn').disabled   = true;
+      saveSubmittedId(empId);
+      submitToSheet();
+      setTimeout(() => {
+        document.getElementById('result-overlay').classList.add('visible');
+      }, 600);
+      return;
+    }
+
+    input.value = '';
+    input.focus();
+  }
+
+  function submitToSheet() {
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+    const payload = {
+      empId:          empId,
+      q1Selected:     selectedChar,
+      q1IsCorrect:    selectedChar === Q1_CORRECT_CHAR,
+      q2IsCorrect:    isCorrectAnswerGiven,
+      tries:          tries,
+      answers:        submittedAnswers.join(', ')
+    };
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  }
+
+  // 숫자 입력창 엔터 → 버튼 클릭 유도
+  document.getElementById('answer-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); alert('아래 확인하기를 눌러주세요'); }
+  });
+  document.getElementById('emp-id').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('answer-input').focus();
+  });
+</script>
+</body>
+</html>
